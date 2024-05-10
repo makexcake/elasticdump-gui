@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Elastic Dumper</title>
+  <link rel="stylesheet" href="/static/bootstrap.min.css">
+  <style>
+    body {
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .btn-primary {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Elastic Dumper</h1>
+    <form>
+      <div class="form-group">
+        <label for="endpoint">Elasticsearch Endpoint:</label>
+        <input type="text" class="form-control" id="endpoint" name="endpoint" required>
+      </div>
+      <div class="form-group">
+        <label for="username">Elasticsearch Username:</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Elasticsearch Password:</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <div class="form-group">
+        <label for="indexName">Index Name:</label>
+        <input type="text" class="form-control" id="indexName" name="indexName" required>
+      </div>
+      <div class="form-group">
+        <label for="outputFilename">Output Filename (required):</label>
+        <input type="text" class="form-control" id="outputFilename" name="outputFilename" required>
+      </div>
+      <div class="form-group">
+        <label for="filter">Filter (DSL format):</label>
+        <textarea class="form-control" id="filter" name="filter" rows="5"></textarea>
+      </div>
+      <div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" id="useHttps" name="useHttps">
+        <label class="form-check-label" for="useHttps">Use HTTPS</label>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="extractLogs()">Extract Logs</button>
+    </form>
+  </div>
+
+  <script src="/static/jquery.min.js"></script>
+  <script src="/static/popper.min.js"></script>
+  <script src="/static/bootstrap.min.js"></script>
+  <script>
+    function extractLogs() {
+      const endpoint = document.getElementById('endpoint').value;
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const indexName = document.getElementById('indexName').value;
+      const outputFilename = document.getElementById('outputFilename').value;
+      const filter = document.getElementById('filter').value;
+      const useHttps = document.getElementById('useHttps').checked;
+
+      fetch('/extract-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ endpoint, username, password, indexName, outputFilename, filter, useHttps }),
+      })
+        .then(response => response.text())
+        .then(result => {
+          alert(result);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while extracting logs.');
+        });
+    }
+  </script>
+</body>
+</html>
