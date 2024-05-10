@@ -2,7 +2,7 @@ version: '3'
 services:
   elastic-dumper:
     # build: .
-    image: elastic-dumpling:0.4
+    image: elastic-dumpling:0.1.0
     ports:
       - "8085:3000"
     environment:
