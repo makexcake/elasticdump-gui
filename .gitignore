@@ -36,3 +36,6 @@ Thumbs.db
 *.class
 *.pyc
 *.o
+
+# ingore imported folder
+imported/
