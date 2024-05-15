@@ -2,7 +2,7 @@ version: '3'
 services:
   elastic-dumper:
     # build: .
-    image: elastic-dumpling:0.1.0
+    image: elastic-dumpling:0.1.3-rf
     ports:
       - "8085:3000"
     environment:
@@ -11,7 +11,7 @@ services:
       - PASSWORD=kX3LgPZbdyEH02wp
       - ENDPOINT=rke-lab-n1.ts.loc:30210
       - NODE_TLS_REJECT_UNAUTHORIZED=0
-      - INDEX_NAME=jaeger-span-2024-04-08
+      - INDEX_NAME=jaeger-span-2024-05-12
     volumes: 
       - /mnt/c/projects/tsgs/elastic-dumpling/imported:/app/imported-indices # Folder for importer indexes
-      # - /mnt/c/projects/tsgs/elastic-dumpling/exported:/app/exported-indices # Folder for default filters
+      - /mnt/c/projects/tsgs/elasticsearch-sample-data:/app/filters # Folder for default filter 

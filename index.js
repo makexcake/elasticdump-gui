@@ -2,9 +2,7 @@ const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-// const updateFilterTimestamp = require('./utils/updateFilterTimestamp');
 
-const filterFilePath = 'filters/filter.json';
 const app = express();
 app.use(express.json());
 app.use('/static', express.static(path.join(__dirname, 'static')));
@@ -32,20 +30,10 @@ app.post('/extract-logs', (req, res) => {
 
   const useHttps = scheme === 'https';
 
-  // If no filter is provided in gui, use the default filter
-  if (filter == null || filter === '') {
-    const existingFilterJson = fs.readFileSync(filterFilePath, 'utf8');
-    const existingFilter = JSON.parse(existingFilterJson);
-    // const updatedFilter = updateFilterTimestamp(existingFilter);
-    const updatedFilterVariable = updatedFilter;
-    console.log('Updated Filter:', updatedFilterVariable);
-    filter = JSON.stringify(updatedFilterVariable);
-  }
-
   const commands = [
     'cd /app/imported-indices',
     `elasticdump --output=${outputFilename}-mapping.json --input=${scheme}://${username}:${password}@${endpoint}/${indexName} --type=mapping --limit=10000`,
-    `elasticdump --output=${outputFilename}-data.json --input=${scheme}://${username}:${password}@${endpoint}/${indexName} --type=data --limit=10000 --searchBody='${JSON.stringify(filter)}'`,
+    `elasticdump --output=${outputFilename}-data.json --input=${scheme}://${username}:${password}@${endpoint}/${indexName} --type=data --limit=10000 --searchBody='${filter}'`,
   ];
 
   exec(commands.join(' && '), (error, stdout, stderr) => {
