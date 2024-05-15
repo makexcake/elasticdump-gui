@@ -39,3 +39,4 @@ Thumbs.db
 
 # ingore imported folder
 imported/
+notes.*
