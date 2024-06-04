@@ -30,10 +30,18 @@ app.post('/extract-logs', (req, res) => {
 
   const useHttps = scheme === 'https';
 
+  // Build the input URL
+  let inputUrl;
+  if (username && password) {
+    inputUrl = `${scheme}://${username}:${password}@${endpoint}/${indexName}`;
+  } else {
+    inputUrl = `${scheme}://${endpoint}/${indexName}`;
+  }
+
   const commands = [
     'cd /app/imported-indices',
-    `elasticdump --output=${outputFilename}-mapping.json --input=${scheme}://${username}:${password}@${endpoint}/${indexName} --type=mapping --limit=10000`,
-    `elasticdump --output=${outputFilename}-data.json --input=${scheme}://${username}:${password}@${endpoint}/${indexName} --type=data --limit=10000 --searchBody='${filter}'`,
+    `elasticdump --output=${outputFilename}-mapping.json --input=${inputUrl} --type=mapping --limit=10000`,
+    `elasticdump --output=${outputFilename}-data.json --input=${inputUrl} --type=data --limit=10000 --searchBody='${filter}'`,
   ];
 
   exec(commands.join(' && '), (error, stdout, stderr) => {
@@ -49,6 +57,7 @@ app.post('/extract-logs', (req, res) => {
     res.send('Logs extracted successfully!');
   });
 });
+
 
 const port = 3000;
 app.listen(port, () => {
