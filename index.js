@@ -2,11 +2,17 @@ const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const WebSocket = require('ws');
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 app.use(express.json());
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
+// Serve the default filter
 app.get('/default-filter', (req, res) => {
   res.sendFile(path.join(__dirname, 'filters', 'default-filter.json'), {
     headers: {
@@ -15,6 +21,7 @@ app.get('/default-filter', (req, res) => {
   });
 });
 
+// Serve the HTML file at the root path
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -44,22 +51,33 @@ app.post('/extract-logs', (req, res) => {
     `elasticdump --output=${outputFilename}-data.json --input=${inputUrl} --type=data --limit=10000 --searchBody='${filter}'`,
   ];
 
-  exec(commands.join(' && '), (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error: ${error.message}`);
-      res.status(500).send('An error occurred while extracting logs.');
-      return;
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-    }
-    console.log(`stdout: ${stdout}`);
+  const childProcess = exec(commands.join(' && '));
+
+  childProcess.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data);
+      }
+    });
+  });
+
+  childProcess.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(`Error: ${data}`);
+      }
+    });
+  });
+
+  childProcess.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
     res.send('Logs extracted successfully!');
   });
 });
 
-
 const port = 3000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
