@@ -39,5 +39,3 @@ Thumbs.db
 
 # ingore imported folder
 imported/
-
-docker-compose.*
