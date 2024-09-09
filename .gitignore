@@ -43,3 +43,5 @@ notes.*
 *docker-compose.*
 docker-compose.yaml
 docker-compose.yaml
+filters/*
+default-filter.json

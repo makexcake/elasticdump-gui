@@ -14,11 +14,18 @@ app.use('/static', express.static(path.join(__dirname, 'static')));
 
 // Serve the default filter
 app.get('/default-filter', (req, res) => {
-  res.sendFile(path.join(__dirname, 'filters', 'default-filter.json'), {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const defaultFilterPath = path.join(__dirname, 'filters', 'default-filter.json');
+  
+  // Check if the default filter file exists
+  if (fs.existsSync(defaultFilterPath)) {
+    res.sendFile(defaultFilterPath, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } else {
+    res.status(404).send('Default filter not found');
+  }
 });
 
 // Serve the HTML file at the root path
@@ -48,8 +55,14 @@ app.post('/extract-logs', (req, res) => {
   const commands = [
     'cd /app/imported-indices',
     `elasticdump --output=${outputFilename}-mapping.json --input=${inputUrl} --type=mapping --limit=10000`,
-    `elasticdump --output=${outputFilename}-data.json --input=${inputUrl} --type=data --limit=10000 --searchBody='${filter}'`,
   ];
+
+  // Check if filter exists and is not empty
+  if (filter && Object.keys(filter).length > 0) {
+    commands.push(`elasticdump --output=${outputFilename}-data.json --input=${inputUrl} --type=data --limit=10000 --searchBody='${JSON.stringify(filter)}'`);
+  } else {
+    commands.push(`elasticdump --output=${outputFilename}-data.json --input=${inputUrl} --type=data --limit=10000`);
+  }
 
   const childProcess = exec(commands.join(' && '));
 
