@@ -7,6 +7,8 @@ https://github.com/elasticsearch-dump/elasticsearch-dump
 
 Essentially, this service is elasticdump wrapped in a GUI and deployed via Docker Compose and soon on K8s.
 
+![Screenshot 2024-09-13 132827](https://github.com/user-attachments/assets/4313dac1-2d08-4929-8c25-6549bf281c95)
+
 ## Installation
 
 First, we need to package the service into a container. Here's an example `docker-compose.yaml` file:
