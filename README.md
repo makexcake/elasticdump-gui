@@ -15,6 +15,7 @@ First, we need to package the service into a container. Here's an example `docke
 
 ```yaml
 services:
+
   elasticdump-gui:
     # build: .
     image: elasticdump-gui:latest
