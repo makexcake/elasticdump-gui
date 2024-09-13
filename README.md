@@ -5,7 +5,9 @@ Not long ago, I needed to export an index from one Elasticsearch instance to ano
 To address this issue, I wrote a simple program in JavaScript, based on the elasticdump node library: 
 https://github.com/elasticsearch-dump/elasticsearch-dump
 
-Essentially, this service is elasticdump wrapped in a GUI and deployed via Docker Compose.
+Essentially, this service is elasticdump wrapped in a GUI and deployed via Docker Compose and soon on K8s.
+
+![Screenshot 2024-09-13 132827](https://github.com/user-attachments/assets/4313dac1-2d08-4929-8c25-6549bf281c95)
 
 ## Installation
 
@@ -13,9 +15,10 @@ First, we need to package the service into a container. Here's an example `docke
 
 ```yaml
 services:
-  elastic-dumper:
+
+  elasticdump-gui:
     # build: .
-    image: elasticdump-gui:0.1.0
+    image: elasticdump-gui:latest
     ports:
       - "8080:3000"
     # Here we set default parameters in case there is one default index that needs to be pulled.
@@ -27,7 +30,8 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0 # In case your Elasticsearch is insecure
       - INDEX_NAME=example*
     volumes: 
-      - <my-folders>:/app/imported-indices # Folder for imported indexes
+      - <local-path>:/app/imported-indices # Folder for imported indexes
+      - <local-path>:/app/filters # Folder for default filters
 ```
 
 ## Usage
@@ -77,6 +81,9 @@ When the index is pulled, you will find it in the folder specified in the `volum
 
 ## Future Updates
 
-Future updates will include an option for using a default filter in case there is a standard filter that is always used.
+- Gui refactoring
+- Dynamic filter construction
+- Security implemintation
+- Helm chart for deployment on k8s
 
 Thank you for your interest, and you are welcome to contribute!

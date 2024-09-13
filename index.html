@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Elastic Dumper</title>
+  <title>Elastic Dump GUI</title>
+  <script src="/static/clientScript.js"></script>
   <link rel="stylesheet" href="/static/bootstrap.min.css">
   <style>
     body {
@@ -16,27 +17,39 @@
     .btn-primary {
       margin-top: 20px;
     }
+    #logWindow {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 20px;
+      background-color: #f8f9fa;
+    }
+    #progressIndicator {
+      display: none;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Elastic Dumper</h1>
-    <form>
+    <h1>Elastic Dump GUI</h1>
+    <form id="extractForm">
       <div class="form-group">
-        <label for="endpoint">Elasticsearch Endpoint:</label>
-        <input type="text" class="form-control" id="endpoint" name="endpoint" required>
+        <label for="endpoint">Elasticsearch Endpoint (Leave empty for default):</label>
+        <input type="text" class="form-control" id="endpoint" name="endpoint">
       </div>
       <div class="form-group">
-        <label for="username">Elasticsearch Username:</label>
-        <input type="text" class="form-control" id="username" name="username" required>
+        <label for="username">Elasticsearch Username (Leave empty for default):</label>
+        <input type="text" class="form-control" id="username" name="username">
       </div>
       <div class="form-group">
-        <label for="password">Elasticsearch Password:</label>
-        <input type="password" class="form-control" id="password" name="password" required>
+        <label for="password">Elasticsearch Password (Leave empty for default):</label>
+        <input type="password" class="form-control" id="password" name="password">
       </div>
       <div class="form-group">
-        <label for="indexName">Index Name:</label>
-        <input type="text" class="form-control" id="indexName" name="indexName" required>
+        <label for="indexName">Index Name (Leave empty for default):</label>
+        <input type="text" class="form-control" id="indexName" name="indexName">
       </div>
       <div class="form-group">
         <label for="outputFilename">Output Filename (required):</label>
@@ -52,12 +65,21 @@
       </div>
       <button type="button" class="btn btn-primary" onclick="extractLogs()">Extract Logs</button>
     </form>
+    <div id="progressIndicator" class="alert alert-info" role="alert">
+      <strong>In Progress:</strong> Extracting logs... Please wait.
+    </div>
+    <div id="logWindow" class="mt-4">
+      <h4>Log Output:</h4>
+      <pre id="logContent"></pre>
+    </div>
   </div>
 
   <script src="/static/jquery.min.js"></script>
   <script src="/static/popper.min.js"></script>
   <script src="/static/bootstrap.min.js"></script>
   <script>
+    let logSocket;
+  
     function extractLogs() {
       const endpoint = document.getElementById('endpoint').value;
       const username = document.getElementById('username').value;
@@ -66,7 +88,29 @@
       const outputFilename = document.getElementById('outputFilename').value;
       const filter = document.getElementById('filter').value;
       const useHttps = document.getElementById('useHttps').checked;
-
+  
+      // Clear previous logs
+      document.getElementById('logContent').innerHTML = '';
+  
+      // Show progress indicator
+      document.getElementById('progressIndicator').style.display = 'block';
+  
+      // Disable the form
+      document.getElementById('extractForm').querySelectorAll('input, textarea, button').forEach(el => el.disabled = true);
+  
+      // Setup WebSocket connection
+      logSocket = new WebSocket(`ws://${window.location.host}`);
+      
+      logSocket.onmessage = function(event) {
+        const logContent = document.getElementById('logContent');
+        logContent.innerHTML += event.data + '\n';
+        
+        // Use requestAnimationFrame to scroll after the browser has had time to render the new content
+        requestAnimationFrame(() => {
+          logContent.scrollTop = logContent.scrollHeight;
+        });
+      };
+  
       fetch('/extract-logs', {
         method: 'POST',
         headers: {
@@ -76,13 +120,34 @@
       })
         .then(response => response.text())
         .then(result => {
-          alert(result);
+          alert("Operation Finished");
+          if (logSocket) {
+            logSocket.close();
+          }
+          // Hide progress indicator and re-enable form
+          document.getElementById('progressIndicator').style.display = 'none';
+          document.getElementById('extractForm').querySelectorAll('input, textarea, button').forEach(el => el.disabled = false);
         })
         .catch(error => {
           console.error('Error:', error);
           alert('An error occurred while extracting logs.');
+          if (logSocket) {
+            logSocket.close();
+          }
+          // Hide progress indicator and re-enable form
+          document.getElementById('progressIndicator').style.display = 'none';
+          document.getElementById('extractForm').querySelectorAll('input, textarea, button').forEach(el => el.disabled = false);
         });
     }
+  
+    // Function to scroll log window to bottom
+    function scrollLogToBottom() {
+      const logContent = document.getElementById('logContent');
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+  
+    // Call scrollLogToBottom periodically
+    setInterval(scrollLogToBottom, 100);
   </script>
 </body>
 </html>

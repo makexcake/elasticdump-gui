@@ -34,3 +34,4 @@ imported-indices
 
 # ingore imported folder 
 imported
+filters/*
